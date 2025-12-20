@@ -18,12 +18,11 @@ All endpoints have automatic failover with health checks built in. If the primar
 | Endpoint | Location | Failover To |
 |----------|----------|-------------|
 | `cdn-sea.datahorders.org` | Seattle, WA | Los Angeles |
-| `cdn-lax.datahorders.org` | Los Angeles, CA | Fremont |
-| `cdn-zendc.datahorders.org` | Fremont, CA | Los Angeles |
+| `cdn-lax.datahorders.org` | Los Angeles, CA | Dallas |
 | `cdn-dal.datahorders.org` | Dallas, TX | Los Angeles |
 | `cdn-ord.datahorders.org` | Chicago, IL | New York |
 | `cdn-nyc.datahorders.org` | New York, NY | Dallas |
-| `cdn-mia.datahorders.org` | Miami, FL | Fremont |
+| `cdn-mia.datahorders.org` | Miami, FL | Dallas |
 | `cdn-lhr.datahorders.org` | London, UK | Amsterdam |
 | `cdn-ams.datahorders.org` | Amsterdam, NL | London |
 | `cdn-sgp.datahorders.org` | Singapore | Los Angeles |
@@ -77,7 +76,7 @@ cdn.example.com  ──►  Geo lookup ──►  cdn-lax.datahorders.org
 - **Automatic Failover**: Health checks run every 30 seconds. If a server fails, traffic routes to backup automatically.
 - **60-Second TTL**: Fast failover - clients get new IP within 60 seconds of a failure.
 - **No AWS Access Required**: All health checks and failover logic runs on our side.
-- **Global Coverage**: 11 nodes across North America, Europe, Asia, and Oceania.
+- **Global Coverage**: 10 nodes across North America, Europe, Asia, and Oceania.
 
 ## AWS Route 53 Setup
 
@@ -112,11 +111,11 @@ The setup script supports granular US state routing (51 states + DC), matching o
 
 Each endpoint has automatic failover:
 - SEA → LAX
-- LAX → ZenDC
+- LAX → DAL
 - DAL → LAX
 - ORD → NYC
 - NYC → DAL
-- MIA → ZenDC
+- MIA → DAL
 
 ## Recommended Regional Mapping
 
@@ -179,7 +178,7 @@ aws route53 change-resource-record-sets \
   --change-batch file://yourdomain-com-cdn-records.json
 ```
 
-Now all Australian/Oceania users will be routed to Los Angeles, with automatic failover to Fremont (ZenDC) if LAX goes down.
+Now all Australian/Oceania users will be routed to Los Angeles, with automatic failover to Dallas if LAX goes down.
 
 ### Other Common Customizations
 

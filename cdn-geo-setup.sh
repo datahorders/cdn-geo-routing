@@ -27,19 +27,18 @@ BOLD='\033[1m'
 # Format: endpoint|location|primary_ip|failover_location
 declare -A CDN_ENDPOINTS=(
     ["sea"]="cdn-sea.datahorders.org|Seattle, WA|192.169.45.56|Los Angeles"
-    ["lax"]="cdn-lax.datahorders.org|Los Angeles, CA|185.193.157.86|Fremont"
-    ["zendc"]="cdn-zendc.datahorders.org|Fremont, CA|208.99.62.241|Los Angeles"
+    ["lax"]="cdn-lax.datahorders.org|Los Angeles, CA|185.193.157.86|Dallas"
     ["dal"]="cdn-dal.datahorders.org|Dallas, TX|192.34.101.21|Los Angeles"
     ["ord"]="cdn-ord.datahorders.org|Chicago, IL|193.239.236.132|New York"
     ["nyc"]="cdn-nyc.datahorders.org|New York, NY|162.249.168.179|Dallas"
-    ["mia"]="cdn-mia.datahorders.org|Miami, FL|199.127.63.5|Fremont"
+    ["mia"]="cdn-mia.datahorders.org|Miami, FL|199.127.63.5|Dallas"
     ["lhr"]="cdn-lhr.datahorders.org|London, UK|57.129.130.174|Amsterdam"
     ["ams"]="cdn-ams.datahorders.org|Amsterdam, NL|94.75.213.19|London"
     ["sgp"]="cdn-sgp.datahorders.org|Singapore|77.83.241.35|Los Angeles"
     ["aus"]="cdn-aus.datahorders.org|Sydney, AU|103.1.215.87|Los Angeles"
 )
 
-ENDPOINT_ORDER=("sea" "lax" "zendc" "dal" "ord" "nyc" "mia" "lhr" "ams" "sgp" "aus")
+ENDPOINT_ORDER=("sea" "lax" "dal" "ord" "nyc" "mia" "lhr" "ams" "sgp" "aus")
 
 # Continent codes
 CONTINENTS=("NA" "SA" "EU" "AF" "AS" "OC")
@@ -238,7 +237,7 @@ select_routing() {
         elif [[ "$choice" == "0" ]]; then
             # Skip
             :
-        elif [[ $choice =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le 11 ]; then
+        elif [[ $choice =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le 10 ]; then
             local idx=$((choice - 1))
             USER_ROUTING[$continent]="${ENDPOINT_ORDER[$idx]}"
         else
