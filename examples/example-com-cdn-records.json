@@ -1,0 +1,82 @@
+{
+  "Comment": "Geo-routing for cdn.example.com using datahorders CDN",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-na",
+        "GeoLocation": {"ContinentCode": "NA"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-sa",
+        "GeoLocation": {"ContinentCode": "SA"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-mia.datahorders.org"}]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-eu",
+        "GeoLocation": {"ContinentCode": "EU"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-ams.datahorders.org"}]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-af",
+        "GeoLocation": {"ContinentCode": "AF"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-lhr.datahorders.org"}]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-as",
+        "GeoLocation": {"ContinentCode": "AS"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-sgp.datahorders.org"}]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-oc",
+        "GeoLocation": {"ContinentCode": "OC"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-aus.datahorders.org"}]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "cdn.example.com",
+        "Type": "CNAME",
+        "SetIdentifier": "cdn.example.com-default",
+        "GeoLocation": {"CountryCode": "*"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
+      }
+    }
+  ]
+}
