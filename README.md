@@ -338,93 +338,304 @@ cdn.example.com  CNAME  cdn-aus.datahorders.org   [Oceania]
 cdn.example.com  CNAME  cdn-lax.datahorders.org   [Default]
 ```
 
-### Example 3: AWS Route 53 JSON
+### Example 3: AWS Route 53 Traffic Policy (Advanced)
 
-Complete Route 53 change batch for global geo-routing:
+For advanced geo-routing with AWS Route 53, you can use a **Traffic Policy** instead of individual records. Traffic policies support hierarchical routing, where a top-level rule routes to region-specific rules, which then route to individual endpoints.
+
+**How Traffic Policies Work:**
+
+1. **StartRule** - The entry point that routes by continent
+2. **Geo Rules** - Each continent rule routes to country or US state-level rules
+3. **Endpoints** - The final CNAME targets (our CDN regional endpoints)
+
+This example shows a simplified traffic policy with:
+- Continent-level routing at the top
+- US state-level routing within North America
+- Country-level routing for Europe
 
 ```json
 {
-  "Comment": "Geo-routing for cdn.example.com using DataHorders CDN",
-  "Changes": [
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-na",
-        "GeoLocation": {"ContinentCode": "NA"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
-      }
+  "AWSPolicyFormatVersion": "2015-10-01",
+  "RecordType": "CNAME",
+  "StartRule": "geo-start",
+  "Endpoints": {
+    "ep-seattle": {
+      "Type": "value",
+      "Value": "cdn-sea.datahorders.org"
     },
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-sa",
-        "GeoLocation": {"ContinentCode": "SA"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-mia.datahorders.org"}]
-      }
+    "ep-losangeles": {
+      "Type": "value",
+      "Value": "cdn-lax.datahorders.org"
     },
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-eu",
-        "GeoLocation": {"ContinentCode": "EU"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-ams.datahorders.org"}]
-      }
+    "ep-dallas": {
+      "Type": "value",
+      "Value": "cdn-dal.datahorders.org"
     },
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-af",
-        "GeoLocation": {"ContinentCode": "AF"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-lhr.datahorders.org"}]
-      }
+    "ep-chicago": {
+      "Type": "value",
+      "Value": "cdn-ord.datahorders.org"
     },
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-as",
-        "GeoLocation": {"ContinentCode": "AS"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-sgp.datahorders.org"}]
-      }
+    "ep-newyork": {
+      "Type": "value",
+      "Value": "cdn-nyc.datahorders.org"
     },
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-oc",
-        "GeoLocation": {"ContinentCode": "OC"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-aus.datahorders.org"}]
-      }
+    "ep-miami": {
+      "Type": "value",
+      "Value": "cdn-mia.datahorders.org"
     },
-    {
-      "Action": "UPSERT",
-      "ResourceRecordSet": {
-        "Name": "cdn.example.com",
-        "Type": "CNAME",
-        "SetIdentifier": "cdn-default",
-        "GeoLocation": {"CountryCode": "*"},
-        "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
-      }
+    "ep-london": {
+      "Type": "value",
+      "Value": "cdn-lhr.datahorders.org"
+    },
+    "ep-amsterdam": {
+      "Type": "value",
+      "Value": "cdn-ams.datahorders.org"
+    },
+    "ep-singapore": {
+      "Type": "value",
+      "Value": "cdn-sgp.datahorders.org"
+    },
+    "ep-sydney": {
+      "Type": "value",
+      "Value": "cdn-aus.datahorders.org"
     }
-  ]
+  },
+  "Rules": {
+    "geo-start": {
+      "RuleType": "geo",
+      "Locations": [
+        {
+          "IsDefault": true,
+          "EndpointReference": "ep-losangeles"
+        },
+        {
+          "Continent": "NA",
+          "RuleReference": "geo-northamerica"
+        },
+        {
+          "Continent": "SA",
+          "EndpointReference": "ep-miami"
+        },
+        {
+          "Continent": "EU",
+          "RuleReference": "geo-europe"
+        },
+        {
+          "Continent": "AF",
+          "EndpointReference": "ep-london"
+        },
+        {
+          "Continent": "AS",
+          "EndpointReference": "ep-singapore"
+        },
+        {
+          "Continent": "OC",
+          "EndpointReference": "ep-sydney"
+        }
+      ]
+    },
+    "geo-northamerica": {
+      "RuleType": "geo",
+      "Locations": [
+        {
+          "IsDefault": true,
+          "EndpointReference": "ep-losangeles"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "WA",
+          "EndpointReference": "ep-seattle"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "OR",
+          "EndpointReference": "ep-seattle"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "ID",
+          "EndpointReference": "ep-seattle"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "CA",
+          "EndpointReference": "ep-losangeles"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "NV",
+          "EndpointReference": "ep-losangeles"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "AZ",
+          "EndpointReference": "ep-losangeles"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "TX",
+          "EndpointReference": "ep-dallas"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "OK",
+          "EndpointReference": "ep-dallas"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "LA",
+          "EndpointReference": "ep-dallas"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "IL",
+          "EndpointReference": "ep-chicago"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "WI",
+          "EndpointReference": "ep-chicago"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "MN",
+          "EndpointReference": "ep-chicago"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "MI",
+          "EndpointReference": "ep-chicago"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "NY",
+          "EndpointReference": "ep-newyork"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "NJ",
+          "EndpointReference": "ep-newyork"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "PA",
+          "EndpointReference": "ep-newyork"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "MA",
+          "EndpointReference": "ep-newyork"
+        },
+        {
+          "Country": "US",
+          "Subdivision": "FL",
+          "EndpointReference": "ep-miami"
+        },
+        {
+          "Country": "CA",
+          "EndpointReference": "ep-seattle"
+        },
+        {
+          "Country": "MX",
+          "EndpointReference": "ep-dallas"
+        }
+      ]
+    },
+    "geo-europe": {
+      "RuleType": "geo",
+      "Locations": [
+        {
+          "IsDefault": true,
+          "EndpointReference": "ep-amsterdam"
+        },
+        {
+          "Country": "GB",
+          "EndpointReference": "ep-london"
+        },
+        {
+          "Country": "IE",
+          "EndpointReference": "ep-london"
+        },
+        {
+          "Country": "FR",
+          "EndpointReference": "ep-london"
+        },
+        {
+          "Country": "ES",
+          "EndpointReference": "ep-london"
+        },
+        {
+          "Country": "DE",
+          "EndpointReference": "ep-amsterdam"
+        },
+        {
+          "Country": "NL",
+          "EndpointReference": "ep-amsterdam"
+        },
+        {
+          "Country": "SE",
+          "EndpointReference": "ep-amsterdam"
+        },
+        {
+          "Country": "NO",
+          "EndpointReference": "ep-amsterdam"
+        },
+        {
+          "Country": "PL",
+          "EndpointReference": "ep-amsterdam"
+        }
+      ]
+    }
+  }
 }
+```
+
+**Key Concepts in This Example:**
+
+| Concept | Description |
+|---------|-------------|
+| **StartRule** | The `geo-start` rule is evaluated first for every request |
+| **RuleReference** | Routes to another rule (e.g., `geo-northamerica`) for further evaluation |
+| **EndpointReference** | Routes directly to a CDN endpoint (e.g., `ep-miami`) |
+| **IsDefault** | Catches any location not explicitly matched in the rule |
+| **Subdivision** | US state codes for state-level routing (e.g., `WA`, `CA`, `TX`) |
+
+**How Routing Flows:**
+
+```
+User in Texas
+    |
+    v
+geo-start (Continent: NA)
+    |
+    v
+geo-northamerica (Country: US, Subdivision: TX)
+    |
+    v
+ep-dallas -> cdn-dal.datahorders.org
+```
+
+**Note:** This is a simplified example. The full DataHorders CDN uses this hierarchical approach with all 50 US states, comprehensive country coverage, and failover rules with health checks. You can point your endpoints to our regional endpoints (like `cdn-dal.datahorders.org`) which already have failover built in.
+
+**To use a Traffic Policy:**
+
+1. Create the traffic policy in Route 53
+2. Create a traffic policy instance pointing to your hosted zone
+3. Specify the DNS name (e.g., `cdn.example.com`)
+
+```bash
+# Create the traffic policy
+aws route53 create-traffic-policy \
+  --name "CDN-GeoRouting" \
+  --document file://traffic-policy.json
+
+# Create an instance of the policy
+aws route53 create-traffic-policy-instance \
+  --hosted-zone-id YOUR_ZONE_ID \
+  --name "cdn.example.com" \
+  --ttl 300 \
+  --traffic-policy-id POLICY_ID \
+  --traffic-policy-version 1
 ```
 
 ### Example 4: Simple Single-Region Setup
