@@ -148,6 +148,48 @@ dig cdn.yourdomain.com @1.1.1.1 +short      # Cloudflare
 dig cdn.yourdomain.com @9.9.9.9 +short      # Quad9
 ```
 
+## Customizing Your Routing
+
+### Example: Bypass Australia and Route to Los Angeles
+
+If you want to skip the Australian CDN node and route all Oceania traffic to Los Angeles instead:
+
+1. **During interactive setup**, when prompted for Oceania, select `lax` instead of `aus`
+
+2. **Or edit the generated JSON** - change the Oceania record:
+
+```json
+{
+  "Action": "UPSERT",
+  "ResourceRecordSet": {
+    "Name": "cdn.yourdomain.com",
+    "Type": "CNAME",
+    "SetIdentifier": "cdn.yourdomain.com-oc",
+    "GeoLocation": {"ContinentCode": "OC"},
+    "TTL": 300,
+    "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
+  }
+}
+```
+
+3. **Apply the change:**
+```bash
+aws route53 change-resource-record-sets \
+  --hosted-zone-id YOUR_ZONE_ID \
+  --change-batch file://yourdomain-com-cdn-records.json
+```
+
+Now all Australian/Oceania users will be routed to Los Angeles, with automatic failover to Fremont (ZenDC) if LAX goes down.
+
+### Other Common Customizations
+
+| Scenario | Change Endpoint To |
+|----------|-------------------|
+| Skip Australia → use LAX | `cdn-lax.datahorders.org` for OC |
+| Skip Singapore → use LAX | `cdn-lax.datahorders.org` for AS |
+| All Europe → London only | `cdn-lhr.datahorders.org` for EU |
+| All US → single endpoint | Remove US state records, use `cdn-lax.datahorders.org` for NA |
+
 ## Troubleshooting
 
 ### DNS not resolving
