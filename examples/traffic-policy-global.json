@@ -1,0 +1,208 @@
+{
+  "_description": "AWS Route 53 Traffic Policy with comprehensive global geo-routing",
+  "_usage": [
+    "1. Create traffic policy: aws route53 create-traffic-policy --name 'CDN Global' --document file://traffic-policy-global.json",
+    "2. Create policy instance: aws route53 create-traffic-policy-instance --hosted-zone-id YOUR_ZONE_ID --name cdn.example.com --ttl 60 --traffic-policy-id POLICY_ID --traffic-policy-version 1"
+  ],
+  "_notes": [
+    "This example provides comprehensive global coverage with continent and country-level routing",
+    "North America: Routes to regional US endpoints (see traffic-policy-us-states.json for state-level)",
+    "Europe: Western Europe to London, Central/Eastern/Northern Europe to Amsterdam",
+    "Asia: All routes to Singapore",
+    "Oceania: Routes to Sydney",
+    "South America, Central America, Caribbean: Routes to Miami",
+    "Africa and Middle East: Routes based on proximity to London or Amsterdam",
+    "All endpoints have automatic failover built-in on the datahorders.org side"
+  ],
+  "_coverage": {
+    "North America": "cdn-lax (default), cdn-nyc (Eastern Canada), cdn-sea (Western Canada), cdn-dal (Mexico)",
+    "South America": "cdn-mia",
+    "Europe - London": "GB, IE, FR, ES, PT, BE, LU, IS",
+    "Europe - Amsterdam": "DE, NL, AT, CH, PL, CZ, SK, HU, DK, NO, SE, FI, IT, GR, RO, BG, HR, SI, RS, BA, ME, MK, AL, EE, LV, LT, UA, BY, MD, MT, CY, RU, TR",
+    "Africa - London": "NG, ZA, KE, ET, GH, TZ, UG, CD",
+    "Africa - Amsterdam": "MA, DZ, TN, LY, EG, SD",
+    "Middle East": "cdn-ams (SA, AE, KW, QA, IL, IQ, IR)",
+    "Asia": "cdn-sgp",
+    "Oceania": "cdn-aus"
+  },
+
+  "AWSPolicyFormatVersion": "2023-05-09",
+  "RecordType": "CNAME",
+  "StartRule": "geo-start",
+  "Endpoints": {
+    "ep-sea": {"Type": "value", "Value": "cdn-sea.datahorders.org"},
+    "ep-lax": {"Type": "value", "Value": "cdn-lax.datahorders.org"},
+    "ep-dal": {"Type": "value", "Value": "cdn-dal.datahorders.org"},
+    "ep-ord": {"Type": "value", "Value": "cdn-ord.datahorders.org"},
+    "ep-nyc": {"Type": "value", "Value": "cdn-nyc.datahorders.org"},
+    "ep-mia": {"Type": "value", "Value": "cdn-mia.datahorders.org"},
+    "ep-lhr": {"Type": "value", "Value": "cdn-lhr.datahorders.org"},
+    "ep-ams": {"Type": "value", "Value": "cdn-ams.datahorders.org"},
+    "ep-sgp": {"Type": "value", "Value": "cdn-sgp.datahorders.org"},
+    "ep-aus": {"Type": "value", "Value": "cdn-aus.datahorders.org"}
+  },
+  "Rules": {
+    "geo-start": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-lax"},
+        {"Continent": "NA", "RuleReference": "geo-north-america"},
+        {"Continent": "SA", "EndpointReference": "ep-mia"},
+        {"Continent": "EU", "RuleReference": "geo-europe"},
+        {"Continent": "AF", "RuleReference": "geo-africa"},
+        {"Continent": "AS", "RuleReference": "geo-asia"},
+        {"Continent": "OC", "RuleReference": "geo-oceania"}
+      ]
+    },
+    "geo-north-america": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-lax"},
+        {"Country": "US", "EndpointReference": "ep-lax"},
+        {"Country": "CA", "RuleReference": "geo-canada"},
+        {"Country": "MX", "EndpointReference": "ep-dal"},
+        {"Country": "GT", "EndpointReference": "ep-mia"},
+        {"Country": "BZ", "EndpointReference": "ep-mia"},
+        {"Country": "HN", "EndpointReference": "ep-mia"},
+        {"Country": "SV", "EndpointReference": "ep-mia"},
+        {"Country": "NI", "EndpointReference": "ep-mia"},
+        {"Country": "CR", "EndpointReference": "ep-mia"},
+        {"Country": "PA", "EndpointReference": "ep-mia"},
+        {"Country": "CU", "EndpointReference": "ep-mia"},
+        {"Country": "JM", "EndpointReference": "ep-mia"},
+        {"Country": "HT", "EndpointReference": "ep-mia"},
+        {"Country": "DO", "EndpointReference": "ep-mia"},
+        {"Country": "BS", "EndpointReference": "ep-mia"},
+        {"Country": "BB", "EndpointReference": "ep-mia"},
+        {"Country": "TT", "EndpointReference": "ep-mia"}
+      ]
+    },
+    "geo-canada": {
+      "RuleType": "geoproximity",
+      "GeoproximityLocations": [
+        {
+          "EndpointReference": "ep-nyc",
+          "Latitude": "43.6532",
+          "Longitude": "-79.3832",
+          "Bias": 0
+        },
+        {
+          "EndpointReference": "ep-sea",
+          "Latitude": "49.2827",
+          "Longitude": "-123.1207",
+          "Bias": 0
+        }
+      ]
+    },
+    "geo-europe": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-ams"},
+
+        {"Country": "GB", "EndpointReference": "ep-lhr"},
+        {"Country": "IE", "EndpointReference": "ep-lhr"},
+        {"Country": "FR", "EndpointReference": "ep-lhr"},
+        {"Country": "ES", "EndpointReference": "ep-lhr"},
+        {"Country": "PT", "EndpointReference": "ep-lhr"},
+        {"Country": "BE", "EndpointReference": "ep-lhr"},
+        {"Country": "LU", "EndpointReference": "ep-lhr"},
+        {"Country": "IS", "EndpointReference": "ep-lhr"},
+
+        {"Country": "DE", "EndpointReference": "ep-ams"},
+        {"Country": "NL", "EndpointReference": "ep-ams"},
+        {"Country": "AT", "EndpointReference": "ep-ams"},
+        {"Country": "CH", "EndpointReference": "ep-ams"},
+        {"Country": "PL", "EndpointReference": "ep-ams"},
+        {"Country": "CZ", "EndpointReference": "ep-ams"},
+        {"Country": "SK", "EndpointReference": "ep-ams"},
+        {"Country": "HU", "EndpointReference": "ep-ams"},
+        {"Country": "DK", "EndpointReference": "ep-ams"},
+        {"Country": "NO", "EndpointReference": "ep-ams"},
+        {"Country": "SE", "EndpointReference": "ep-ams"},
+        {"Country": "FI", "EndpointReference": "ep-ams"},
+        {"Country": "IT", "EndpointReference": "ep-ams"},
+        {"Country": "GR", "EndpointReference": "ep-ams"},
+        {"Country": "RO", "EndpointReference": "ep-ams"},
+        {"Country": "BG", "EndpointReference": "ep-ams"},
+        {"Country": "HR", "EndpointReference": "ep-ams"},
+        {"Country": "SI", "EndpointReference": "ep-ams"},
+        {"Country": "RS", "EndpointReference": "ep-ams"},
+        {"Country": "BA", "EndpointReference": "ep-ams"},
+        {"Country": "ME", "EndpointReference": "ep-ams"},
+        {"Country": "MK", "EndpointReference": "ep-ams"},
+        {"Country": "AL", "EndpointReference": "ep-ams"},
+        {"Country": "EE", "EndpointReference": "ep-ams"},
+        {"Country": "LV", "EndpointReference": "ep-ams"},
+        {"Country": "LT", "EndpointReference": "ep-ams"},
+        {"Country": "UA", "EndpointReference": "ep-ams"},
+        {"Country": "BY", "EndpointReference": "ep-ams"},
+        {"Country": "MD", "EndpointReference": "ep-ams"},
+        {"Country": "MT", "EndpointReference": "ep-ams"},
+        {"Country": "CY", "EndpointReference": "ep-ams"},
+        {"Country": "RU", "EndpointReference": "ep-ams"},
+        {"Country": "TR", "EndpointReference": "ep-ams"}
+      ]
+    },
+    "geo-africa": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-lhr"},
+
+        {"Country": "MA", "EndpointReference": "ep-ams"},
+        {"Country": "DZ", "EndpointReference": "ep-ams"},
+        {"Country": "TN", "EndpointReference": "ep-ams"},
+        {"Country": "LY", "EndpointReference": "ep-ams"},
+        {"Country": "EG", "EndpointReference": "ep-ams"},
+        {"Country": "SD", "EndpointReference": "ep-ams"},
+
+        {"Country": "NG", "EndpointReference": "ep-lhr"},
+        {"Country": "ZA", "EndpointReference": "ep-lhr"},
+        {"Country": "KE", "EndpointReference": "ep-lhr"},
+        {"Country": "ET", "EndpointReference": "ep-lhr"},
+        {"Country": "GH", "EndpointReference": "ep-lhr"},
+        {"Country": "TZ", "EndpointReference": "ep-lhr"},
+        {"Country": "UG", "EndpointReference": "ep-lhr"},
+        {"Country": "CD", "EndpointReference": "ep-lhr"}
+      ]
+    },
+    "geo-asia": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-sgp"},
+
+        {"Country": "SA", "EndpointReference": "ep-ams"},
+        {"Country": "AE", "EndpointReference": "ep-ams"},
+        {"Country": "KW", "EndpointReference": "ep-ams"},
+        {"Country": "QA", "EndpointReference": "ep-ams"},
+        {"Country": "IL", "EndpointReference": "ep-ams"},
+        {"Country": "IQ", "EndpointReference": "ep-ams"},
+        {"Country": "IR", "EndpointReference": "ep-ams"},
+        {"Country": "KZ", "EndpointReference": "ep-ams"},
+        {"Country": "UZ", "EndpointReference": "ep-ams"},
+
+        {"Country": "CN", "EndpointReference": "ep-sgp"},
+        {"Country": "HK", "EndpointReference": "ep-sgp"},
+        {"Country": "TW", "EndpointReference": "ep-sgp"},
+        {"Country": "JP", "EndpointReference": "ep-sgp"},
+        {"Country": "KR", "EndpointReference": "ep-sgp"},
+        {"Country": "SG", "EndpointReference": "ep-sgp"},
+        {"Country": "MY", "EndpointReference": "ep-sgp"},
+        {"Country": "TH", "EndpointReference": "ep-sgp"},
+        {"Country": "VN", "EndpointReference": "ep-sgp"},
+        {"Country": "PH", "EndpointReference": "ep-sgp"},
+        {"Country": "ID", "EndpointReference": "ep-sgp"},
+        {"Country": "IN", "EndpointReference": "ep-sgp"},
+        {"Country": "BD", "EndpointReference": "ep-sgp"},
+        {"Country": "PK", "EndpointReference": "ep-sgp"}
+      ]
+    },
+    "geo-oceania": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-aus"},
+        {"Country": "AU", "EndpointReference": "ep-aus"},
+        {"Country": "NZ", "EndpointReference": "ep-aus"}
+      ]
+    }
+  }
+}

@@ -1,5 +1,14 @@
 {
-  "Comment": "Geo-routing for cdn.example.com using datahorders CDN",
+  "_description": "Simple continent-level geo-routing example using Route 53 resource record sets",
+  "_usage": "Apply with: aws route53 change-resource-record-sets --hosted-zone-id YOUR_ZONE_ID --change-batch file://simple-geo-routing.json",
+  "_notes": [
+    "Replace 'cdn.example.com' with your actual domain",
+    "Replace YOUR_ZONE_ID with your Route 53 hosted zone ID",
+    "This is the simplest geo-routing setup - routes by continent only",
+    "For US state-level routing, see traffic-policy-us-states.json",
+    "For comprehensive global routing, see traffic-policy-global.json"
+  ],
+  "Comment": "Geo-routing for cdn.example.com using datahorders CDN - continent level",
   "Changes": [
     {
       "Action": "UPSERT",

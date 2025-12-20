@@ -1,0 +1,125 @@
+{
+  "_description": "AWS Route 53 Traffic Policy with US state-level geo-routing",
+  "_usage": [
+    "1. Create traffic policy: aws route53 create-traffic-policy --name 'CDN US States' --document file://traffic-policy-us-states.json",
+    "2. Create policy instance: aws route53 create-traffic-policy-instance --hosted-zone-id YOUR_ZONE_ID --name cdn.example.com --ttl 60 --traffic-policy-id POLICY_ID --traffic-policy-version 1"
+  ],
+  "_notes": [
+    "This example routes US traffic to 6 regional CDN endpoints based on state",
+    "Canada routes to NYC (Eastern) or Seattle (Western) based on geoproximity",
+    "Mexico routes to Dallas",
+    "Default fallback is Los Angeles",
+    "All endpoints have automatic failover built-in on the datahorders.org side"
+  ],
+  "_endpoints": {
+    "Seattle (cdn-sea)": "WA, OR, ID, MT, AK",
+    "Los Angeles (cdn-lax)": "CA, NV, AZ, UT, HI, WY + default",
+    "Dallas (cdn-dal)": "TX, OK, NM, AR, LA, KS, CO, GA, SC, AL, MS, TN, KY + Mexico",
+    "Chicago (cdn-ord)": "IL, WI, MN, IA, MO, NE, SD, ND, MI, IN",
+    "New York (cdn-nyc)": "NY, NJ, PA, CT, MA, RI, NH, VT, ME, DE, MD, DC, OH, WV, VA, NC + Eastern Canada",
+    "Miami (cdn-mia)": "FL"
+  },
+
+  "AWSPolicyFormatVersion": "2023-05-09",
+  "RecordType": "CNAME",
+  "StartRule": "geo-north-america",
+  "Endpoints": {
+    "ep-sea": {"Type": "value", "Value": "cdn-sea.datahorders.org"},
+    "ep-lax": {"Type": "value", "Value": "cdn-lax.datahorders.org"},
+    "ep-dal": {"Type": "value", "Value": "cdn-dal.datahorders.org"},
+    "ep-ord": {"Type": "value", "Value": "cdn-ord.datahorders.org"},
+    "ep-nyc": {"Type": "value", "Value": "cdn-nyc.datahorders.org"},
+    "ep-mia": {"Type": "value", "Value": "cdn-mia.datahorders.org"}
+  },
+  "Rules": {
+    "geo-north-america": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-lax"},
+        {"Country": "US", "RuleReference": "geo-us-states"},
+        {"Country": "CA", "RuleReference": "geo-canada"},
+        {"Country": "MX", "EndpointReference": "ep-dal"}
+      ]
+    },
+    "geo-us-states": {
+      "RuleType": "geo",
+      "Locations": [
+        {"IsDefault": true, "EndpointReference": "ep-lax"},
+
+        {"Country": "US", "Subdivision": "WA", "EndpointReference": "ep-sea"},
+        {"Country": "US", "Subdivision": "OR", "EndpointReference": "ep-sea"},
+        {"Country": "US", "Subdivision": "ID", "EndpointReference": "ep-sea"},
+        {"Country": "US", "Subdivision": "MT", "EndpointReference": "ep-sea"},
+        {"Country": "US", "Subdivision": "AK", "EndpointReference": "ep-sea"},
+
+        {"Country": "US", "Subdivision": "CA", "EndpointReference": "ep-lax"},
+        {"Country": "US", "Subdivision": "NV", "EndpointReference": "ep-lax"},
+        {"Country": "US", "Subdivision": "AZ", "EndpointReference": "ep-lax"},
+        {"Country": "US", "Subdivision": "UT", "EndpointReference": "ep-lax"},
+        {"Country": "US", "Subdivision": "HI", "EndpointReference": "ep-lax"},
+        {"Country": "US", "Subdivision": "WY", "EndpointReference": "ep-lax"},
+
+        {"Country": "US", "Subdivision": "TX", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "OK", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "NM", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "AR", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "LA", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "KS", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "CO", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "GA", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "SC", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "AL", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "MS", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "TN", "EndpointReference": "ep-dal"},
+        {"Country": "US", "Subdivision": "KY", "EndpointReference": "ep-dal"},
+
+        {"Country": "US", "Subdivision": "IL", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "WI", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "MN", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "IA", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "MO", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "NE", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "SD", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "ND", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "MI", "EndpointReference": "ep-ord"},
+        {"Country": "US", "Subdivision": "IN", "EndpointReference": "ep-ord"},
+
+        {"Country": "US", "Subdivision": "NY", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "NJ", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "PA", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "CT", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "MA", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "RI", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "NH", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "VT", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "ME", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "DE", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "MD", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "DC", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "OH", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "WV", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "VA", "EndpointReference": "ep-nyc"},
+        {"Country": "US", "Subdivision": "NC", "EndpointReference": "ep-nyc"},
+
+        {"Country": "US", "Subdivision": "FL", "EndpointReference": "ep-mia"}
+      ]
+    },
+    "geo-canada": {
+      "RuleType": "geoproximity",
+      "GeoproximityLocations": [
+        {
+          "EndpointReference": "ep-nyc",
+          "Latitude": "43.6532",
+          "Longitude": "-79.3832",
+          "Bias": 0
+        },
+        {
+          "EndpointReference": "ep-sea",
+          "Latitude": "49.2827",
+          "Longitude": "-123.1207",
+          "Bias": 0
+        }
+      ]
+    }
+  }
+}
