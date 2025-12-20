@@ -499,35 +499,6 @@ EOF
     echo "To apply (if your domain is in Route 53):"
     echo "  aws route53 change-resource-record-sets --hosted-zone-id YOUR_ZONE_ID --change-batch file://$output_file"
     echo ""
-
-    # Cloudflare format
-    echo -e "${BOLD}Cloudflare Format:${NC}"
-    echo ""
-    echo "In Cloudflare Dashboard → DNS → Add Record:"
-    echo ""
-    for continent in "${CONTINENTS[@]}"; do
-        if [[ -n "${USER_ROUTING[$continent]}" ]]; then
-            local ep="${USER_ROUTING[$continent]}"
-            local hostname=$(get_endpoint_info "$ep" "hostname")
-            echo "  Type: CNAME | Name: $SUBDOMAIN | Target: $hostname"
-            echo "  (Use Page Rules or Workers for geo-routing)"
-        fi
-    done
-    echo ""
-    print_info "Note: Cloudflare's free tier doesn't support geo DNS. Use their Load Balancing product or Workers."
-    echo ""
-
-    # Simple format
-    echo -e "${BOLD}Simple DNS Format (for other providers):${NC}"
-    echo ""
-    for continent in "${CONTINENTS[@]}"; do
-        if [[ -n "${USER_ROUTING[$continent]}" ]]; then
-            local ep="${USER_ROUTING[$continent]}"
-            local hostname=$(get_endpoint_info "$ep" "hostname")
-            echo "$fqdn.  300  IN  CNAME  $hostname."
-        fi
-    done
-    echo ""
 }
 
 show_summary() {

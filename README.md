@@ -1,10 +1,15 @@
 # CDN Geo-Routing Toolkit
 
-A self-service tool for configuring geo-based DNS routing to datahorders CDN nodes.
+A self-service tool for configuring AWS Route 53 geo-based DNS routing to datahorders CDN nodes.
 
 ## Overview
 
-This toolkit helps CDN customers set up geolocation-based DNS routing for their domains. Point your domain to our regional CDN endpoints, and get automatic failover with health checks - no AWS access required.
+This toolkit helps CDN customers set up geolocation-based DNS routing in **AWS Route 53** for their domains. Point your domain to our regional CDN endpoints, and get automatic failover with health checks.
+
+**Requirements:**
+- AWS account with Route 53
+- Domain hosted in Route 53
+- AWS CLI configured
 
 ## Available CDN Endpoints
 
@@ -26,8 +31,6 @@ All endpoints have automatic failover with health checks built in. If the primar
 
 ## Quick Start
 
-### Option 1: Use the Setup Script (Recommended)
-
 ```bash
 # Clone the repo
 git clone https://github.com/datahorders/cdn-geo-routing.git
@@ -38,24 +41,12 @@ cd cdn-geo-routing
 
 # Interactive setup for your domain
 ./cdn-geo-setup.sh --domain yourdomain.com
+
+# Apply to Route 53
+aws route53 change-resource-record-sets \
+  --hosted-zone-id YOUR_ZONE_ID \
+  --change-batch file://yourdomain-com-cdn-records.json
 ```
-
-### Option 2: Manual Setup
-
-Add CNAME records to your DNS pointing to our regional endpoints:
-
-```
-cdn.yourdomain.com  CNAME  cdn-lax.datahorders.org   ; North America
-cdn.yourdomain.com  CNAME  cdn-lhr.datahorders.org   ; Europe
-cdn.yourdomain.com  CNAME  cdn-sgp.datahorders.org   ; Asia
-cdn.yourdomain.com  CNAME  cdn-aus.datahorders.org   ; Oceania
-cdn.yourdomain.com  CNAME  cdn-mia.datahorders.org   ; South America
-cdn.yourdomain.com  CNAME  cdn-lhr.datahorders.org   ; Africa (default)
-```
-
-If your DNS provider supports geolocation routing:
-- Route each continent/region to the appropriate endpoint
-- The default/fallback should point to your preferred endpoint
 
 ## How It Works
 
@@ -88,11 +79,9 @@ cdn.example.com  ──►  Geo lookup ──►  cdn-lax.datahorders.org
 - **No AWS Access Required**: All health checks and failover logic runs on our side.
 - **Global Coverage**: 11 nodes across North America, Europe, Asia, and Oceania.
 
-## DNS Provider Guides
+## AWS Route 53 Setup
 
-### AWS Route 53
-
-The script generates a ready-to-use JSON change batch:
+The script generates a ready-to-use JSON change batch. Apply it with:
 
 ```bash
 aws route53 change-resource-record-sets \
@@ -100,21 +89,11 @@ aws route53 change-resource-record-sets \
   --change-batch file://yourdomain-cdn-records.json
 ```
 
-### Cloudflare
+### Finding Your Hosted Zone ID
 
-Cloudflare's free tier doesn't support geo DNS. Options:
-1. **Cloudflare Load Balancing** (paid) - supports geo steering
-2. **Cloudflare Workers** - implement geo routing in code
-3. **Single CNAME** - point to one endpoint (e.g., `cdn-lax.datahorders.org`)
-
-### Other Providers
-
-Most enterprise DNS providers support geolocation routing:
-- **NS1**: Geo filters in record configuration
-- **DNSimple**: Regional records
-- **Google Cloud DNS**: Geolocation routing policies
-
-For providers without geo support, use a single CNAME to your preferred regional endpoint.
+```bash
+aws route53 list-hosted-zones --query "HostedZones[?Name=='yourdomain.com.'].Id" --output text
+```
 
 ## US State-Level Routing
 
