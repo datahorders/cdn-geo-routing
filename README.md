@@ -116,6 +116,29 @@ Most enterprise DNS providers support geolocation routing:
 
 For providers without geo support, use a single CNAME to your preferred regional endpoint.
 
+## US State-Level Routing
+
+The setup script supports granular US state routing (51 states + DC), matching our traffic policy:
+
+| CDN Node | States |
+|----------|--------|
+| **SEA** (Seattle) | WA, OR, ID, MT, AK |
+| **LAX** (Los Angeles) | CA, NV, AZ, UT, HI, WY |
+| **DAL** (Dallas) | TX, OK, NM, AR, LA, KS, CO, GA, SC, AL, MS, TN, KY |
+| **ORD** (Chicago) | IL, WI, MN, IA, MO, NE, SD, ND, MI, IN |
+| **NYC** (New York) | NY, NJ, PA, CT, MA, RI, NH, VT, ME, DE, MD, DC, OH, WV, VA, NC |
+| **MIA** (Miami) | FL |
+| **SEA** | Canada |
+| **DAL** | Mexico |
+
+Each endpoint has automatic failover:
+- SEA → LAX
+- LAX → ZenDC
+- DAL → LAX
+- ORD → NYC
+- NYC → DAL
+- MIA → ZenDC
+
 ## Recommended Regional Mapping
 
 | Region | Recommended Endpoint |
