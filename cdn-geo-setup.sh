@@ -62,10 +62,55 @@ declare -A DEFAULT_CONTINENT_ENDPOINT=(
     ["OC"]="aus"
 )
 
+# US State routing (matches traffic policy)
+# SEA: Pacific Northwest
+# LAX: West Coast / Southwest
+# DAL: South Central / Southeast
+# ORD: Midwest
+# NYC: Northeast / Mid-Atlantic
+# MIA: Florida
+declare -A US_STATE_ENDPOINT=(
+    # Seattle region
+    ["WA"]="sea" ["OR"]="sea" ["ID"]="sea" ["MT"]="sea" ["AK"]="sea"
+    # Los Angeles region
+    ["CA"]="lax" ["NV"]="lax" ["AZ"]="lax" ["UT"]="lax" ["HI"]="lax" ["WY"]="lax"
+    # Dallas region
+    ["TX"]="dal" ["OK"]="dal" ["NM"]="dal" ["AR"]="dal" ["LA"]="dal"
+    ["KS"]="dal" ["CO"]="dal" ["GA"]="dal" ["SC"]="dal" ["AL"]="dal"
+    ["MS"]="dal" ["TN"]="dal" ["KY"]="dal"
+    # Chicago region
+    ["IL"]="ord" ["WI"]="ord" ["MN"]="ord" ["IA"]="ord" ["MO"]="ord"
+    ["NE"]="ord" ["SD"]="ord" ["ND"]="ord" ["MI"]="ord" ["IN"]="ord"
+    # NYC region
+    ["NY"]="nyc" ["NJ"]="nyc" ["PA"]="nyc" ["CT"]="nyc" ["MA"]="nyc"
+    ["RI"]="nyc" ["NH"]="nyc" ["VT"]="nyc" ["ME"]="nyc" ["DE"]="nyc"
+    ["MD"]="nyc" ["DC"]="nyc" ["OH"]="nyc" ["WV"]="nyc" ["VA"]="nyc" ["NC"]="nyc"
+    # Miami region
+    ["FL"]="mia"
+)
+
+declare -A US_STATE_NAMES=(
+    ["AL"]="Alabama" ["AK"]="Alaska" ["AZ"]="Arizona" ["AR"]="Arkansas"
+    ["CA"]="California" ["CO"]="Colorado" ["CT"]="Connecticut" ["DE"]="Delaware"
+    ["DC"]="District of Columbia" ["FL"]="Florida" ["GA"]="Georgia" ["HI"]="Hawaii"
+    ["ID"]="Idaho" ["IL"]="Illinois" ["IN"]="Indiana" ["IA"]="Iowa"
+    ["KS"]="Kansas" ["KY"]="Kentucky" ["LA"]="Louisiana" ["ME"]="Maine"
+    ["MD"]="Maryland" ["MA"]="Massachusetts" ["MI"]="Michigan" ["MN"]="Minnesota"
+    ["MS"]="Mississippi" ["MO"]="Missouri" ["MT"]="Montana" ["NE"]="Nebraska"
+    ["NV"]="Nevada" ["NH"]="New Hampshire" ["NJ"]="New Jersey" ["NM"]="New Mexico"
+    ["NY"]="New York" ["NC"]="North Carolina" ["ND"]="North Dakota" ["OH"]="Ohio"
+    ["OK"]="Oklahoma" ["OR"]="Oregon" ["PA"]="Pennsylvania" ["RI"]="Rhode Island"
+    ["SC"]="South Carolina" ["SD"]="South Dakota" ["TN"]="Tennessee" ["TX"]="Texas"
+    ["UT"]="Utah" ["VT"]="Vermont" ["VA"]="Virginia" ["WA"]="Washington"
+    ["WV"]="West Virginia" ["WI"]="Wisconsin" ["WY"]="Wyoming"
+)
+
 # User selections
 CUSTOMER_DOMAIN=""
 declare -A USER_ROUTING
+declare -A USER_US_STATES
 SUBDOMAIN="cdn"  # Default subdomain for CDN
+USE_US_STATES=false
 
 print_header() {
     echo ""
@@ -213,10 +258,42 @@ select_routing() {
     fi
 }
 
+select_us_states() {
+    print_step "Step 3: US State-Level Routing (Optional)"
+
+    echo "Do you want granular US state routing? This routes each US state to the nearest CDN node."
+    echo ""
+    echo "  ${GREEN}1)${NC} Yes - Use recommended state routing (51 states → 6 regional endpoints)"
+    echo "     SEA: WA, OR, ID, MT, AK"
+    echo "     LAX: CA, NV, AZ, UT, HI, WY"
+    echo "     DAL: TX, OK, NM, AR, LA, KS, CO, GA, SC, AL, MS, TN, KY"
+    echo "     ORD: IL, WI, MN, IA, MO, NE, SD, ND, MI, IN"
+    echo "     NYC: NY, NJ, PA, CT, MA, RI, NH, VT, ME, DE, MD, DC, OH, WV, VA, NC"
+    echo "     MIA: FL"
+    echo ""
+    echo "  ${YELLOW}2)${NC} No - Use single North America endpoint for all US traffic"
+    echo ""
+
+    read -r "choice?Choice [1]: "
+
+    if [[ "$choice" == "2" ]]; then
+        USE_US_STATES=false
+        print_info "Using single endpoint for all US traffic"
+    else
+        USE_US_STATES=true
+        # Copy default state routing
+        for state in "${(@k)US_STATE_ENDPOINT}"; do
+            USER_US_STATES[$state]="${US_STATE_ENDPOINT[$state]}"
+        done
+        print_success "Using granular US state routing (51 records)"
+    fi
+}
+
 generate_output() {
     print_step "Generated DNS Records"
 
     local fqdn="${SUBDOMAIN}.${CUSTOMER_DOMAIN}"
+    local record_count=0
 
     echo -e "${BOLD}Add these records to your DNS provider:${NC}"
     echo ""
@@ -224,15 +301,50 @@ generate_output() {
     echo "│ GEOLOCATION DNS RECORDS                                                     │"
     echo "├─────────────────────────────────────────────────────────────────────────────┤"
 
+    # US States (if enabled)
+    if [[ "$USE_US_STATES" == "true" ]]; then
+        printf "│ %-75s │\n" "US State Routing (51 records):"
+
+        # Group states by endpoint for display
+        declare -A states_by_ep
+        for state in "${(@k)USER_US_STATES}"; do
+            local ep="${USER_US_STATES[$state]}"
+            if [[ -z "${states_by_ep[$ep]}" ]]; then
+                states_by_ep[$ep]="$state"
+            else
+                states_by_ep[$ep]="${states_by_ep[$ep]}, $state"
+            fi
+        done
+
+        for ep in "${(@k)states_by_ep}"; do
+            local hostname=$(get_endpoint_info "$ep" "hostname")
+            printf "│   %-73s │\n" "$ep → $hostname"
+            printf "│     %-71s │\n" "States: ${states_by_ep[$ep]}"
+        done
+        echo "├─────────────────────────────────────────────────────────────────────────────┤"
+    fi
+
+    # Continent routing (skip NA if using US states)
     for continent in "${CONTINENTS[@]}"; do
+        if [[ "$continent" == "NA" ]] && [[ "$USE_US_STATES" == "true" ]]; then
+            continue
+        fi
         if [[ -n "${USER_ROUTING[$continent]}" ]]; then
             local ep="${USER_ROUTING[$continent]}"
             local hostname=$(get_endpoint_info "$ep" "hostname")
-            local location=$(get_endpoint_info "$ep" "location")
             printf "│ %-75s │\n" "${CONTINENT_NAMES[$continent]} ($continent):"
             printf "│   %-73s │\n" "$fqdn  CNAME  $hostname"
         fi
     done
+
+    # Canada and Mexico (if using US states)
+    if [[ "$USE_US_STATES" == "true" ]]; then
+        echo "├─────────────────────────────────────────────────────────────────────────────┤"
+        printf "│ %-75s │\n" "Canada (CA):"
+        printf "│   %-73s │\n" "$fqdn  CNAME  cdn-sea.datahorders.org"
+        printf "│ %-75s │\n" "Mexico (MX):"
+        printf "│   %-73s │\n" "$fqdn  CNAME  cdn-dal.datahorders.org"
+    fi
 
     if [[ -n "${USER_ROUTING[DEFAULT]}" ]]; then
         local ep="${USER_ROUTING[DEFAULT]}"
@@ -252,7 +364,78 @@ generate_output() {
     local output_file="${CUSTOMER_DOMAIN//\./-}-cdn-records.json"
 
     local changes=""
+
+    # US State records
+    if [[ "$USE_US_STATES" == "true" ]]; then
+        for state in "${(@k)USER_US_STATES}"; do
+            local ep="${USER_US_STATES[$state]}"
+            local hostname=$(get_endpoint_info "$ep" "hostname")
+
+            if [[ -n "$changes" ]]; then
+                changes+=","
+            fi
+            changes+=$(cat <<EOF
+
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${fqdn}",
+        "Type": "CNAME",
+        "SetIdentifier": "${fqdn}-us-${state:l}",
+        "GeoLocation": {"CountryCode": "US", "SubdivisionCode": "${state}"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "${hostname}"}]
+      }
+    }
+EOF
+)
+            ((record_count++))
+        done
+
+        # Canada
+        changes+=","
+        changes+=$(cat <<EOF
+
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${fqdn}",
+        "Type": "CNAME",
+        "SetIdentifier": "${fqdn}-ca",
+        "GeoLocation": {"CountryCode": "CA"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-sea.datahorders.org"}]
+      }
+    }
+EOF
+)
+        ((record_count++))
+
+        # Mexico
+        changes+=","
+        changes+=$(cat <<EOF
+
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${fqdn}",
+        "Type": "CNAME",
+        "SetIdentifier": "${fqdn}-mx",
+        "GeoLocation": {"CountryCode": "MX"},
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "cdn-dal.datahorders.org"}]
+      }
+    }
+EOF
+)
+        ((record_count++))
+    fi
+
+    # Continent records (skip NA if using US states)
     for continent in "${CONTINENTS[@]}"; do
+        if [[ "$continent" == "NA" ]] && [[ "$USE_US_STATES" == "true" ]]; then
+            continue
+        fi
         if [[ -n "${USER_ROUTING[$continent]}" ]]; then
             local ep="${USER_ROUTING[$continent]}"
             local hostname=$(get_endpoint_info "$ep" "hostname")
@@ -275,6 +458,7 @@ generate_output() {
     }
 EOF
 )
+            ((record_count++))
         fi
     done
 
@@ -298,6 +482,7 @@ EOF
     }
 EOF
 )
+        ((record_count++))
     fi
 
     cat > "$output_file" <<EOF
@@ -309,6 +494,7 @@ EOF
 EOF
 
     echo "Saved to: $output_file"
+    echo "Total records: $record_count"
     echo ""
     echo "To apply (if your domain is in Route 53):"
     echo "  aws route53 change-resource-record-sets --hosted-zone-id YOUR_ZONE_ID --change-batch file://$output_file"
@@ -349,10 +535,27 @@ show_summary() {
 
     echo -e "${BOLD}Your CDN Configuration:${NC}"
     echo ""
+
+    # US State routing summary
+    if [[ "$USE_US_STATES" == "true" ]]; then
+        echo -e "${BOLD}US State Routing:${NC} Enabled (51 states → 6 regional endpoints)"
+        echo "  SEA: WA, OR, ID, MT, AK"
+        echo "  LAX: CA, NV, AZ, UT, HI, WY"
+        echo "  DAL: TX, OK, NM, AR, LA, KS, CO, GA, SC, AL, MS, TN, KY"
+        echo "  ORD: IL, WI, MN, IA, MO, NE, SD, ND, MI, IN"
+        echo "  NYC: NY, NJ, PA, CT, MA, RI, NH, VT, ME, DE, MD, DC, OH, WV, VA, NC"
+        echo "  MIA: FL"
+        echo "  + Canada → SEA, Mexico → DAL"
+        echo ""
+    fi
+
     printf "  %-20s  %-10s  %-30s\n" "Region" "Endpoint" "CDN Location"
     echo "  ────────────────────  ──────────  ──────────────────────────────"
 
     for continent in "${CONTINENTS[@]}"; do
+        if [[ "$continent" == "NA" ]] && [[ "$USE_US_STATES" == "true" ]]; then
+            continue
+        fi
         if [[ -n "${USER_ROUTING[$continent]}" ]]; then
             local ep="${USER_ROUTING[$continent]}"
             local location=$(get_endpoint_info "$ep" "location")
@@ -366,6 +569,10 @@ show_summary() {
         printf "  %-20s  %-10s  %-30s\n" "Default (Fallback)" "$ep" "$location"
     fi
 
+    echo ""
+    echo -e "${BOLD}Failover:${NC}"
+    echo "  Each endpoint has automatic failover with health checks."
+    echo "  If primary goes down, traffic routes to backup within 60 seconds."
     echo ""
     echo -e "${BOLD}How it works:${NC}"
     echo "  1. User requests ${SUBDOMAIN}.${CUSTOMER_DOMAIN}"
@@ -426,6 +633,7 @@ main() {
 
     get_domain
     select_routing
+    select_us_states
     show_summary
     generate_output
 
