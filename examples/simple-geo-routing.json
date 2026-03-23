@@ -6,7 +6,8 @@
     "Replace YOUR_ZONE_ID with your Route 53 hosted zone ID",
     "This is the simplest geo-routing setup - routes by continent only",
     "For US state-level routing, see traffic-policy-us-states.json",
-    "For comprehensive global routing, see traffic-policy-global.json"
+    "For comprehensive global routing, see traffic-policy-global.json",
+    "For the simplest possible setup, just CNAME to cname.datahorders.org instead"
   ],
   "Comment": "Geo-routing for cdn.example.com using datahorders CDN - continent level",
   "Changes": [
@@ -18,7 +19,7 @@
         "SetIdentifier": "cdn.example.com-na",
         "GeoLocation": {"ContinentCode": "NA"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-us-west-1.datahorders.org"}]
       }
     },
     {
@@ -29,7 +30,7 @@
         "SetIdentifier": "cdn.example.com-sa",
         "GeoLocation": {"ContinentCode": "SA"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-mia.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-us-east-2.datahorders.org"}]
       }
     },
     {
@@ -40,7 +41,7 @@
         "SetIdentifier": "cdn.example.com-eu",
         "GeoLocation": {"ContinentCode": "EU"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-ams.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-eu-west-1.datahorders.org"}]
       }
     },
     {
@@ -51,7 +52,7 @@
         "SetIdentifier": "cdn.example.com-af",
         "GeoLocation": {"ContinentCode": "AF"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-lhr.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-eu-west-2.datahorders.org"}]
       }
     },
     {
@@ -62,7 +63,7 @@
         "SetIdentifier": "cdn.example.com-as",
         "GeoLocation": {"ContinentCode": "AS"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-sgp.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-ap-southeast-1.datahorders.org"}]
       }
     },
     {
@@ -73,7 +74,7 @@
         "SetIdentifier": "cdn.example.com-oc",
         "GeoLocation": {"ContinentCode": "OC"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-aus.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-ap-southeast-2.datahorders.org"}]
       }
     },
     {
@@ -84,7 +85,7 @@
         "SetIdentifier": "cdn.example.com-default",
         "GeoLocation": {"CountryCode": "*"},
         "TTL": 300,
-        "ResourceRecords": [{"Value": "cdn-lax.datahorders.org"}]
+        "ResourceRecords": [{"Value": "cdn-us-west-1.datahorders.org"}]
       }
     }
   ]

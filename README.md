@@ -2,6 +2,8 @@
 
 Route your users to the nearest CDN server automatically. This self-service toolkit helps you configure geographic DNS routing for your domain, ensuring users connect to the optimal CDN node based on their location.
 
+> **Note:** Most customers do not need this toolkit. DataHorders CDN automatically routes users to the nearest available server when you use `cname.datahorders.org` as your CNAME target. This toolkit is only for advanced users who want to manually control which regions serve their traffic using their own DNS provider.
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -24,7 +26,9 @@ Route your users to the nearest CDN server automatically. This self-service tool
 
 ## Overview
 
-The DataHorders CDN provides 10 globally distributed edge nodes with built-in automatic failover. Instead of managing complex health checks and failover logic yourself, you simply point your DNS records to our regional endpoints. We handle the rest.
+The DataHorders CDN provides 11 regional pools backed by 19 globally distributed edge nodes with built-in automatic failover. Instead of managing complex health checks and failover logic yourself, you simply point your DNS records to our regional endpoints. We handle the rest.
+
+For the simplest setup, use `cname.datahorders.org` as your CNAME target and we handle all geographic routing automatically. This toolkit is for advanced users who want manual control over which regions serve their traffic.
 
 **How it works:**
 
@@ -42,7 +46,7 @@ The DataHorders CDN provides 10 globally distributed edge nodes with built-in au
 | **Zero Failover Configuration** | Failover is built into our endpoints. No health checks to set up on your side. |
 | **Automatic Health Monitoring** | We monitor all nodes continuously. If a primary goes down, the backup takes over automatically. |
 | **60-Second Failover** | Low TTL means clients receive updated routing within 60 seconds of any node failure. |
-| **Global Coverage** | 10 nodes across 4 continents - North America, Europe, Asia, and Oceania. |
+| **Global Coverage** | 11 regional pools across 4 continents backed by 19 edge nodes - North America, Europe, Asia, and Oceania. |
 | **Simple Setup** | Just create CNAME records. Works with any DNS provider. |
 | **No Vendor Lock-in** | Standard DNS CNAMEs mean you can switch providers anytime. |
 
@@ -50,13 +54,21 @@ The DataHorders CDN provides 10 globally distributed edge nodes with built-in au
 
 ## Quick Start
 
-The fastest way to get started is with a simple CNAME record:
+The fastest way to get started is with a simple CNAME to our automatic geo-routed entry point:
 
 ```
-cdn.yourdomain.com  CNAME  cdn-lax.datahorders.org
+cdn.yourdomain.com  CNAME  cname.datahorders.org
 ```
 
-This routes all your CDN traffic to Los Angeles with automatic failover to Dallas.
+This automatically routes all your CDN traffic to the nearest available server with built-in failover. **Most customers should use this and stop here.**
+
+If you want to manually control routing to a specific region instead:
+
+```
+cdn.yourdomain.com  CNAME  cdn-us-west-1.datahorders.org
+```
+
+This routes all your CDN traffic to Los Angeles with automatic failover to Seattle.
 
 For geographic routing (different regions to different nodes), continue reading below.
 
@@ -64,36 +76,39 @@ For geographic routing (different regions to different nodes), continue reading 
 
 ## Available Regional Endpoints
 
-All endpoints include automatic failover. If the primary node fails health checks, traffic is automatically routed to the failover location.
+All endpoints include automatic failover. If the primary pool fails health checks, traffic is automatically routed to the failover location.
 
-| Endpoint | Primary Location | Automatic Failover |
-|----------|-----------------|-------------------|
-| `cdn-sea.datahorders.org` | Seattle, WA, USA | Los Angeles |
-| `cdn-lax.datahorders.org` | Los Angeles, CA, USA | Dallas |
-| `cdn-dal.datahorders.org` | Dallas, TX, USA | Los Angeles |
-| `cdn-ord.datahorders.org` | Chicago, IL, USA | New York |
-| `cdn-nyc.datahorders.org` | New York, NY, USA | Dallas |
-| `cdn-mia.datahorders.org` | Miami, FL, USA | Dallas |
-| `cdn-lhr.datahorders.org` | London, UK | Amsterdam |
-| `cdn-ams.datahorders.org` | Amsterdam, Netherlands | London |
-| `cdn-sgp.datahorders.org` | Singapore | Los Angeles |
-| `cdn-aus.datahorders.org` | Sydney, Australia | Los Angeles |
+| Endpoint | Primary Location | Nodes | Automatic Failover |
+|----------|-----------------|-------|-------------------|
+| `cdn-us-west-2.datahorders.org` | Seattle, WA, USA | 1 | Los Angeles |
+| `cdn-us-west-1.datahorders.org` | Los Angeles, CA, USA | 1 | Seattle |
+| `cdn-us-central-1.datahorders.org` | Dallas, TX, USA | 1 | Los Angeles |
+| `cdn-us-east-1.datahorders.org` | Ashburn, VA, USA | 5 | Los Angeles |
+| `cdn-us-east-2.datahorders.org` | Miami, FL, USA | 1 | Los Angeles |
+| `cdn-eu-west-2.datahorders.org` | London, UK | 4 | Amsterdam |
+| `cdn-eu-west-1.datahorders.org` | Amsterdam, Netherlands | 1 | London |
+| `cdn-eu-central-2.datahorders.org` | Warsaw, Poland | 1 | Amsterdam |
+| `cdn-ap-southeast-1.datahorders.org` | Singapore | 2 | Los Angeles |
+| `cdn-ap-southeast-2.datahorders.org` | Sydney, Australia | 1 | Los Angeles |
 
 ### Choosing the Right Endpoint
 
 | Your Users Are In | Recommended Endpoint |
 |-------------------|---------------------|
-| US West Coast | `cdn-lax.datahorders.org` or `cdn-sea.datahorders.org` |
-| US Central | `cdn-dal.datahorders.org` or `cdn-ord.datahorders.org` |
-| US East Coast | `cdn-nyc.datahorders.org` or `cdn-mia.datahorders.org` |
-| Canada | `cdn-sea.datahorders.org` |
-| Mexico / Central America | `cdn-dal.datahorders.org` |
-| South America | `cdn-mia.datahorders.org` |
-| UK / Western Europe | `cdn-lhr.datahorders.org` |
-| Central / Eastern Europe | `cdn-ams.datahorders.org` |
-| Middle East | `cdn-ams.datahorders.org` |
-| Asia / Pacific | `cdn-sgp.datahorders.org` |
-| Australia / New Zealand | `cdn-aus.datahorders.org` |
+| US West Coast | `cdn-us-west-1.datahorders.org` or `cdn-us-west-2.datahorders.org` |
+| US Central | `cdn-us-central-1.datahorders.org` |
+| US East Coast | `cdn-us-east-1.datahorders.org` or `cdn-us-east-2.datahorders.org` |
+| Canada (Western) | `cdn-us-west-2.datahorders.org` |
+| Canada (Eastern) | `cdn-us-east-1.datahorders.org` |
+| Mexico / Central America | `cdn-us-central-1.datahorders.org` |
+| South America | `cdn-us-east-2.datahorders.org` |
+| UK / Ireland / Africa | `cdn-eu-west-2.datahorders.org` |
+| Western Europe (NL, FR, ES, PT, Nordics) | `cdn-eu-west-1.datahorders.org` |
+| Central Europe (DE, AT, CH, BE, LU, IT, GR) | `cdn-eu-west-1.datahorders.org` |
+| Eastern Europe (PL, CZ, SK, HU, RO, BG, Balkans, Baltics, UA) | `cdn-eu-central-2.datahorders.org` |
+| Middle East | `cdn-eu-west-1.datahorders.org` |
+| Asia / Pacific | `cdn-ap-southeast-1.datahorders.org` |
+| Australia / New Zealand | `cdn-ap-southeast-2.datahorders.org` |
 
 ---
 
@@ -108,7 +123,13 @@ This method works with any DNS provider (Cloudflare, GoDaddy, Namecheap, Google 
 If most of your users are in one region, use a single CNAME:
 
 ```
-cdn.yourdomain.com    CNAME    cdn-lax.datahorders.org
+cdn.yourdomain.com    CNAME    cdn-us-west-1.datahorders.org
+```
+
+Or for automatic geo-routing without any manual configuration:
+
+```
+cdn.yourdomain.com    CNAME    cname.datahorders.org
 ```
 
 #### Geographic Routing Setup
@@ -117,13 +138,13 @@ For providers that support geo-DNS (AWS Route 53, NS1, Cloudflare Enterprise, et
 
 | Location | Record | Target |
 |----------|--------|--------|
-| North America | `cdn.yourdomain.com` | `cdn-lax.datahorders.org` |
-| South America | `cdn.yourdomain.com` | `cdn-mia.datahorders.org` |
-| Europe | `cdn.yourdomain.com` | `cdn-ams.datahorders.org` |
-| Africa | `cdn.yourdomain.com` | `cdn-lhr.datahorders.org` |
-| Asia | `cdn.yourdomain.com` | `cdn-sgp.datahorders.org` |
-| Oceania | `cdn.yourdomain.com` | `cdn-aus.datahorders.org` |
-| Default (Fallback) | `cdn.yourdomain.com` | `cdn-lax.datahorders.org` |
+| North America | `cdn.yourdomain.com` | `cdn-us-west-1.datahorders.org` |
+| South America | `cdn.yourdomain.com` | `cdn-us-east-2.datahorders.org` |
+| Europe | `cdn.yourdomain.com` | `cdn-eu-west-1.datahorders.org` |
+| Africa | `cdn.yourdomain.com` | `cdn-eu-west-2.datahorders.org` |
+| Asia | `cdn.yourdomain.com` | `cdn-ap-southeast-1.datahorders.org` |
+| Oceania | `cdn.yourdomain.com` | `cdn-ap-southeast-2.datahorders.org` |
+| Default (Fallback) | `cdn.yourdomain.com` | `cdn-us-west-1.datahorders.org` |
 
 **Note:** The exact steps vary by provider. Consult your DNS provider's documentation for geo-routing or geolocation DNS setup.
 
@@ -192,33 +213,31 @@ For customers requiring granular US routing, our endpoints are optimized for spe
 
 | States | Recommended Endpoint |
 |--------|---------------------|
-| Washington, Oregon, Idaho, Montana, Alaska | `cdn-sea.datahorders.org` (Seattle) |
-| California, Nevada, Arizona, Utah, Hawaii, Wyoming | `cdn-lax.datahorders.org` (Los Angeles) |
+| Washington, Oregon, Idaho, Montana, Alaska | `cdn-us-west-2.datahorders.org` (Seattle) |
+| California, Nevada, Arizona, Utah, Hawaii, Wyoming | `cdn-us-west-1.datahorders.org` (Los Angeles) |
 
 ### Central United States
 
 | States | Recommended Endpoint |
 |--------|---------------------|
-| Texas, Oklahoma, New Mexico, Arkansas, Louisiana, Kansas, Colorado, Georgia, South Carolina, Alabama, Mississippi, Tennessee, Kentucky | `cdn-dal.datahorders.org` (Dallas) |
-| Illinois, Wisconsin, Minnesota, Iowa, Missouri, Nebraska, South Dakota, North Dakota, Michigan, Indiana | `cdn-ord.datahorders.org` (Chicago) |
+| Texas, Oklahoma, New Mexico, Arkansas, Louisiana, Kansas, Colorado, Georgia, Alabama, Mississippi, Tennessee, Kentucky | `cdn-us-central-1.datahorders.org` (Dallas) |
 
 ### Eastern United States
 
 | States | Recommended Endpoint |
 |--------|---------------------|
-| New York, New Jersey, Pennsylvania, Connecticut, Massachusetts, Rhode Island, New Hampshire, Vermont, Maine, Delaware, Maryland, Washington DC, Ohio, West Virginia, Virginia, North Carolina | `cdn-nyc.datahorders.org` (New York) |
-| Florida | `cdn-mia.datahorders.org` (Miami) |
+| Virginia, Maryland, Washington DC, Delaware, West Virginia, North Carolina, South Carolina, New York, New Jersey, Pennsylvania, Connecticut, Massachusetts, Rhode Island, New Hampshire, Vermont, Maine, Ohio, Michigan, Indiana, Illinois, Wisconsin, Minnesota, Iowa, Missouri, Nebraska, South Dakota, North Dakota | `cdn-us-east-1.datahorders.org` (Ashburn) |
+| Florida | `cdn-us-east-2.datahorders.org` (Miami) |
 
 ### State Abbreviation Reference
 
 | Endpoint | State Codes |
 |----------|-------------|
-| **Seattle** | WA, OR, ID, MT, AK |
-| **Los Angeles** | CA, NV, AZ, UT, HI, WY |
-| **Dallas** | TX, OK, NM, AR, LA, KS, CO, GA, SC, AL, MS, TN, KY |
-| **Chicago** | IL, WI, MN, IA, MO, NE, SD, ND, MI, IN |
-| **New York** | NY, NJ, PA, CT, MA, RI, NH, VT, ME, DE, MD, DC, OH, WV, VA, NC |
-| **Miami** | FL |
+| **Seattle (us-west-2)** | WA, OR, ID, MT, AK |
+| **Los Angeles (us-west-1)** | CA, NV, AZ, UT, HI, WY |
+| **Dallas (us-central-1)** | TX, OK, NM, AR, LA, KS, CO, GA, AL, MS, TN, KY |
+| **Ashburn (us-east-1)** | VA, MD, DC, DE, WV, NC, SC, NY, NJ, PA, CT, MA, RI, NH, VT, ME, OH, MI, IN, IL, WI, MN, IA, MO, NE, SD, ND |
+| **Miami (us-east-2)** | FL |
 
 ---
 
@@ -228,41 +247,43 @@ For customers requiring granular US routing, our endpoints are optimized for spe
 
 | Country/Region | Recommended Endpoint |
 |----------------|---------------------|
-| Canada (Western) | `cdn-sea.datahorders.org` |
-| Canada (Eastern) | `cdn-nyc.datahorders.org` |
-| Mexico | `cdn-dal.datahorders.org` |
-| Central America | `cdn-dal.datahorders.org` |
-| Caribbean | `cdn-mia.datahorders.org` |
+| Canada (Western) | `cdn-us-west-2.datahorders.org` |
+| Canada (Eastern) | `cdn-us-east-1.datahorders.org` |
+| Mexico | `cdn-us-central-1.datahorders.org` |
+| Central America | `cdn-us-central-1.datahorders.org` |
+| Caribbean | `cdn-us-east-2.datahorders.org` |
 
 ### South America
 
 | Country/Region | Recommended Endpoint |
 |----------------|---------------------|
-| All countries | `cdn-mia.datahorders.org` |
+| All countries | `cdn-us-east-2.datahorders.org` |
 
 ### Europe
 
 | Country/Region | Recommended Endpoint |
 |----------------|---------------------|
-| UK, Ireland, France, Spain, Portugal, Belgium, Iceland | `cdn-lhr.datahorders.org` |
-| Germany, Netherlands, Austria, Switzerland, Scandinavia, Eastern Europe, Italy, Balkans | `cdn-ams.datahorders.org` |
+| UK, Ireland, Iceland | `cdn-eu-west-2.datahorders.org` (London) |
+| France, Spain, Portugal, Netherlands, Denmark, Norway, Sweden, Finland | `cdn-eu-west-1.datahorders.org` (Amsterdam) |
+| Germany, Austria, Switzerland, Belgium, Luxembourg, Italy, Greece | `cdn-eu-west-1.datahorders.org` (Amsterdam) |
+| Poland, Czech Republic, Slovakia, Hungary, Romania, Bulgaria, Balkans, Baltics, Ukraine, Belarus, Moldova | `cdn-eu-central-2.datahorders.org` (Warsaw) |
 
 ### Middle East & Africa
 
 | Country/Region | Recommended Endpoint |
 |----------------|---------------------|
-| North Africa (Morocco, Algeria, Tunisia, Libya, Egypt) | `cdn-ams.datahorders.org` |
-| Sub-Saharan Africa | `cdn-lhr.datahorders.org` |
-| Middle East (UAE, Saudi Arabia, Israel, etc.) | `cdn-ams.datahorders.org` |
+| Sub-Saharan Africa | `cdn-eu-west-2.datahorders.org` (London) |
+| North Africa (Morocco, Algeria, Tunisia, Libya, Egypt) | `cdn-eu-west-1.datahorders.org` (Amsterdam) |
+| Middle East (UAE, Saudi Arabia, Israel, etc.) | `cdn-eu-west-1.datahorders.org` (Amsterdam) |
 
 ### Asia Pacific
 
 | Country/Region | Recommended Endpoint |
 |----------------|---------------------|
-| China, Hong Kong, Taiwan, Japan, South Korea | `cdn-sgp.datahorders.org` |
-| Southeast Asia (Singapore, Malaysia, Thailand, Vietnam, Philippines, Indonesia) | `cdn-sgp.datahorders.org` |
-| India, Pakistan, Bangladesh | `cdn-sgp.datahorders.org` |
-| Australia, New Zealand | `cdn-aus.datahorders.org` |
+| China, Hong Kong, Taiwan, Japan, South Korea | `cdn-ap-southeast-1.datahorders.org` |
+| Southeast Asia (Singapore, Malaysia, Thailand, Vietnam, Philippines, Indonesia) | `cdn-ap-southeast-1.datahorders.org` |
+| India, Pakistan, Bangladesh | `cdn-ap-southeast-1.datahorders.org` |
+| Australia, New Zealand | `cdn-ap-southeast-2.datahorders.org` |
 
 ---
 
@@ -278,20 +299,20 @@ Your User                    Your DNS                    Our CDN Infrastructure
     |--------------------------->|                               |
     |                            |                               |
     |                   2. Return CNAME                          |
-    |                      cdn-lax.datahorders.org               |
+    |                      cdn-us-west-1.datahorders.org         |
     |<---------------------------|                               |
     |                                                            |
-    | 3. Resolve cdn-lax.datahorders.org                         |
+    | 3. Resolve cdn-us-west-1.datahorders.org                   |
     |--------------------------------------------------------------->|
     |                                                            |
     |                            4. Health Check                 |
-    |                               Is LAX healthy?              |
+    |                               Is us-west-1 healthy?       |
     |                                    |                       |
     |                         +----------+----------+            |
     |                         |                     |            |
     |                       YES                    NO            |
     |                         |                     |            |
-    |                   Return LAX IP        Return Dallas IP    |
+    |                   Return LAX IP        Return Seattle IP   |
     |                    (Primary)             (Failover)        |
     |<---------------------------------------------------------------|
     |                                                            |
@@ -317,11 +338,11 @@ For a website primarily serving US users:
 ```
 # Route 53 / Geo-DNS Configuration
 
-cdn.example.com  CNAME  cdn-lax.datahorders.org   [US-West: CA, WA, OR, NV, AZ]
-cdn.example.com  CNAME  cdn-dal.datahorders.org   [US-Central: TX, CO, etc.]
-cdn.example.com  CNAME  cdn-nyc.datahorders.org   [US-East: NY, PA, etc.]
-cdn.example.com  CNAME  cdn-mia.datahorders.org   [US-Southeast: FL]
-cdn.example.com  CNAME  cdn-lax.datahorders.org   [Default fallback]
+cdn.example.com  CNAME  cdn-us-west-1.datahorders.org    [US-West: CA, WA, OR, NV, AZ]
+cdn.example.com  CNAME  cdn-us-central-1.datahorders.org  [US-Central: TX, CO, etc.]
+cdn.example.com  CNAME  cdn-us-east-1.datahorders.org     [US-East: NY, PA, VA, etc.]
+cdn.example.com  CNAME  cdn-us-east-2.datahorders.org     [US-Southeast: FL]
+cdn.example.com  CNAME  cdn-us-west-1.datahorders.org     [Default fallback]
 ```
 
 ### Example 2: Global Website
@@ -329,13 +350,13 @@ cdn.example.com  CNAME  cdn-lax.datahorders.org   [Default fallback]
 For a website serving users worldwide:
 
 ```
-cdn.example.com  CNAME  cdn-lax.datahorders.org   [North America]
-cdn.example.com  CNAME  cdn-mia.datahorders.org   [South America]
-cdn.example.com  CNAME  cdn-ams.datahorders.org   [Europe]
-cdn.example.com  CNAME  cdn-lhr.datahorders.org   [Africa]
-cdn.example.com  CNAME  cdn-sgp.datahorders.org   [Asia]
-cdn.example.com  CNAME  cdn-aus.datahorders.org   [Oceania]
-cdn.example.com  CNAME  cdn-lax.datahorders.org   [Default]
+cdn.example.com  CNAME  cdn-us-west-1.datahorders.org      [North America]
+cdn.example.com  CNAME  cdn-us-east-2.datahorders.org      [South America]
+cdn.example.com  CNAME  cdn-eu-west-1.datahorders.org      [Europe]
+cdn.example.com  CNAME  cdn-eu-west-2.datahorders.org      [Africa]
+cdn.example.com  CNAME  cdn-ap-southeast-1.datahorders.org [Asia]
+cdn.example.com  CNAME  cdn-ap-southeast-2.datahorders.org [Oceania]
+cdn.example.com  CNAME  cdn-us-west-1.datahorders.org      [Default]
 ```
 
 ### Example 3: AWS Route 53 Traffic Policy (Advanced)
@@ -359,45 +380,45 @@ This example shows a simplified traffic policy with:
   "RecordType": "CNAME",
   "StartRule": "geo-start",
   "Endpoints": {
-    "ep-seattle": {
+    "ep-us-west-2": {
       "Type": "value",
-      "Value": "cdn-sea.datahorders.org"
+      "Value": "cdn-us-west-2.datahorders.org"
     },
-    "ep-losangeles": {
+    "ep-us-west-1": {
       "Type": "value",
-      "Value": "cdn-lax.datahorders.org"
+      "Value": "cdn-us-west-1.datahorders.org"
     },
-    "ep-dallas": {
+    "ep-us-central-1": {
       "Type": "value",
-      "Value": "cdn-dal.datahorders.org"
+      "Value": "cdn-us-central-1.datahorders.org"
     },
-    "ep-chicago": {
+    "ep-us-east-1": {
       "Type": "value",
-      "Value": "cdn-ord.datahorders.org"
+      "Value": "cdn-us-east-1.datahorders.org"
     },
-    "ep-newyork": {
+    "ep-us-east-2": {
       "Type": "value",
-      "Value": "cdn-nyc.datahorders.org"
+      "Value": "cdn-us-east-2.datahorders.org"
     },
-    "ep-miami": {
+    "ep-eu-west-2": {
       "Type": "value",
-      "Value": "cdn-mia.datahorders.org"
+      "Value": "cdn-eu-west-2.datahorders.org"
     },
-    "ep-london": {
+    "ep-eu-west-1": {
       "Type": "value",
-      "Value": "cdn-lhr.datahorders.org"
+      "Value": "cdn-eu-west-1.datahorders.org"
     },
-    "ep-amsterdam": {
+    "ep-eu-central-2": {
       "Type": "value",
-      "Value": "cdn-ams.datahorders.org"
+      "Value": "cdn-eu-central-2.datahorders.org"
     },
-    "ep-singapore": {
+    "ep-ap-southeast-1": {
       "Type": "value",
-      "Value": "cdn-sgp.datahorders.org"
+      "Value": "cdn-ap-southeast-1.datahorders.org"
     },
-    "ep-sydney": {
+    "ep-ap-southeast-2": {
       "Type": "value",
-      "Value": "cdn-aus.datahorders.org"
+      "Value": "cdn-ap-southeast-2.datahorders.org"
     }
   },
   "Rules": {
@@ -406,7 +427,7 @@ This example shows a simplified traffic policy with:
       "Locations": [
         {
           "IsDefault": true,
-          "EndpointReference": "ep-losangeles"
+          "EndpointReference": "ep-us-west-1"
         },
         {
           "Continent": "NA",
@@ -414,7 +435,7 @@ This example shows a simplified traffic policy with:
         },
         {
           "Continent": "SA",
-          "EndpointReference": "ep-miami"
+          "EndpointReference": "ep-us-east-2"
         },
         {
           "Continent": "EU",
@@ -422,15 +443,15 @@ This example shows a simplified traffic policy with:
         },
         {
           "Continent": "AF",
-          "EndpointReference": "ep-london"
+          "EndpointReference": "ep-eu-west-2"
         },
         {
           "Continent": "AS",
-          "EndpointReference": "ep-singapore"
+          "EndpointReference": "ep-ap-southeast-1"
         },
         {
           "Continent": "OC",
-          "EndpointReference": "ep-sydney"
+          "EndpointReference": "ep-ap-southeast-2"
         }
       ]
     },
@@ -439,105 +460,105 @@ This example shows a simplified traffic policy with:
       "Locations": [
         {
           "IsDefault": true,
-          "EndpointReference": "ep-losangeles"
+          "EndpointReference": "ep-us-west-1"
         },
         {
           "Country": "US",
           "Subdivision": "WA",
-          "EndpointReference": "ep-seattle"
+          "EndpointReference": "ep-us-west-2"
         },
         {
           "Country": "US",
           "Subdivision": "OR",
-          "EndpointReference": "ep-seattle"
+          "EndpointReference": "ep-us-west-2"
         },
         {
           "Country": "US",
           "Subdivision": "ID",
-          "EndpointReference": "ep-seattle"
+          "EndpointReference": "ep-us-west-2"
         },
         {
           "Country": "US",
           "Subdivision": "CA",
-          "EndpointReference": "ep-losangeles"
+          "EndpointReference": "ep-us-west-1"
         },
         {
           "Country": "US",
           "Subdivision": "NV",
-          "EndpointReference": "ep-losangeles"
+          "EndpointReference": "ep-us-west-1"
         },
         {
           "Country": "US",
           "Subdivision": "AZ",
-          "EndpointReference": "ep-losangeles"
+          "EndpointReference": "ep-us-west-1"
         },
         {
           "Country": "US",
           "Subdivision": "TX",
-          "EndpointReference": "ep-dallas"
+          "EndpointReference": "ep-us-central-1"
         },
         {
           "Country": "US",
           "Subdivision": "OK",
-          "EndpointReference": "ep-dallas"
+          "EndpointReference": "ep-us-central-1"
         },
         {
           "Country": "US",
           "Subdivision": "LA",
-          "EndpointReference": "ep-dallas"
+          "EndpointReference": "ep-us-central-1"
         },
         {
           "Country": "US",
           "Subdivision": "IL",
-          "EndpointReference": "ep-chicago"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "WI",
-          "EndpointReference": "ep-chicago"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "MN",
-          "EndpointReference": "ep-chicago"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "MI",
-          "EndpointReference": "ep-chicago"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "NY",
-          "EndpointReference": "ep-newyork"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "NJ",
-          "EndpointReference": "ep-newyork"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "PA",
-          "EndpointReference": "ep-newyork"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "MA",
-          "EndpointReference": "ep-newyork"
+          "EndpointReference": "ep-us-east-1"
         },
         {
           "Country": "US",
           "Subdivision": "FL",
-          "EndpointReference": "ep-miami"
+          "EndpointReference": "ep-us-east-2"
         },
         {
           "Country": "CA",
-          "EndpointReference": "ep-seattle"
+          "EndpointReference": "ep-us-west-2"
         },
         {
           "Country": "MX",
-          "EndpointReference": "ep-dallas"
+          "EndpointReference": "ep-us-central-1"
         }
       ]
     },
@@ -546,43 +567,55 @@ This example shows a simplified traffic policy with:
       "Locations": [
         {
           "IsDefault": true,
-          "EndpointReference": "ep-amsterdam"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "GB",
-          "EndpointReference": "ep-london"
+          "EndpointReference": "ep-eu-west-2"
         },
         {
           "Country": "IE",
-          "EndpointReference": "ep-london"
+          "EndpointReference": "ep-eu-west-2"
         },
         {
           "Country": "FR",
-          "EndpointReference": "ep-london"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "ES",
-          "EndpointReference": "ep-london"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "DE",
-          "EndpointReference": "ep-amsterdam"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "NL",
-          "EndpointReference": "ep-amsterdam"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "SE",
-          "EndpointReference": "ep-amsterdam"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "NO",
-          "EndpointReference": "ep-amsterdam"
+          "EndpointReference": "ep-eu-west-1"
         },
         {
           "Country": "PL",
-          "EndpointReference": "ep-amsterdam"
+          "EndpointReference": "ep-eu-central-2"
+        },
+        {
+          "Country": "CZ",
+          "EndpointReference": "ep-eu-central-2"
+        },
+        {
+          "Country": "HU",
+          "EndpointReference": "ep-eu-central-2"
+        },
+        {
+          "Country": "RO",
+          "EndpointReference": "ep-eu-central-2"
         }
       ]
     }
@@ -596,7 +629,7 @@ This example shows a simplified traffic policy with:
 |---------|-------------|
 | **StartRule** | The `geo-start` rule is evaluated first for every request |
 | **RuleReference** | Routes to another rule (e.g., `geo-northamerica`) for further evaluation |
-| **EndpointReference** | Routes directly to a CDN endpoint (e.g., `ep-miami`) |
+| **EndpointReference** | Routes directly to a CDN endpoint (e.g., `ep-us-east-2`) |
 | **IsDefault** | Catches any location not explicitly matched in the rule |
 | **Subdivision** | US state codes for state-level routing (e.g., `WA`, `CA`, `TX`) |
 
@@ -612,10 +645,10 @@ geo-start (Continent: NA)
 geo-northamerica (Country: US, Subdivision: TX)
     |
     v
-ep-dallas -> cdn-dal.datahorders.org
+ep-us-central-1 -> cdn-us-central-1.datahorders.org
 ```
 
-**Note:** This is a simplified example. The full DataHorders CDN uses this hierarchical approach with all 50 US states, comprehensive country coverage, and failover rules with health checks. You can point your endpoints to our regional endpoints (like `cdn-dal.datahorders.org`) which already have failover built in.
+**Note:** This is a simplified example. The full DataHorders CDN uses this hierarchical approach with all 50 US states, comprehensive country coverage, and failover rules with health checks. You can point your endpoints to our regional endpoints (like `cdn-us-central-1.datahorders.org`) which already have failover built in.
 
 **To use a Traffic Policy:**
 
@@ -644,14 +677,14 @@ If you do not need geo-routing and want the simplest possible setup:
 
 **DNS Record (any provider):**
 ```
-cdn.example.com    300    IN    CNAME    cdn-lax.datahorders.org.
+cdn.example.com    300    IN    CNAME    cdn-us-west-1.datahorders.org.
 ```
 
 Or in a typical DNS control panel:
 ```
 Type:   CNAME
 Name:   cdn
-Target: cdn-lax.datahorders.org
+Target: cdn-us-west-1.datahorders.org
 TTL:    300
 ```
 
@@ -667,7 +700,7 @@ After configuring your DNS records, verify the setup is working correctly.
 # Check that your CNAME resolves
 dig cdn.yourdomain.com +short
 
-# Expected output: cdn-lax.datahorders.org (or your chosen endpoint)
+# Expected output: cdn-us-west-1.datahorders.org (or your chosen endpoint)
 # Followed by the IP address of that endpoint
 ```
 
@@ -675,7 +708,7 @@ dig cdn.yourdomain.com +short
 
 ```bash
 # Verify our endpoint is resolving
-dig cdn-lax.datahorders.org +short
+dig cdn-us-west-1.datahorders.org +short
 
 # Should return an IP address
 ```
@@ -715,6 +748,10 @@ curl -sI https://cdn.yourdomain.com/ | grep -i server
 
 A: No. You only need an AWS account if you want to use our setup script with AWS Route 53. For manual setup, any DNS provider works.
 
+**Q: What is the simplest way to use the CDN?**
+
+A: Just create a CNAME record pointing to `cname.datahorders.org`. We handle all geographic routing and failover automatically. This toolkit is only needed if you want to manually control routing.
+
 **Q: How much does this cost?**
 
 A: Contact our sales team for pricing information. DNS configuration on your end uses your existing DNS provider's pricing.
@@ -749,7 +786,7 @@ A: Standard HTTP (80) and HTTPS (443). Contact support if you need custom port c
 
 A: Check the response headers or use:
 ```bash
-dig cdn-lax.datahorders.org +short
+dig cdn-us-west-1.datahorders.org +short
 ```
 Then compare with the IP returned for your domain.
 
@@ -779,7 +816,7 @@ A: Yes. Simply update your DNS records. Changes propagate according to the TTL.
 1. Wait for DNS propagation (up to 48 hours, usually minutes)
 2. Verify the record was created in your DNS provider's dashboard
 3. Check for typos in the CNAME target
-4. Ensure you included the trailing dot if your provider requires it (`cdn-lax.datahorders.org.`)
+4. Ensure you included the trailing dot if your provider requires it (`cdn-us-west-1.datahorders.org.`)
 
 ### Getting Wrong Geographic Region
 
@@ -797,7 +834,7 @@ A: Yes. Simply update your DNS records. Changes propagate according to the TTL.
 
 **Solutions:**
 1. Verify users are being routed to the nearest endpoint (check with `dig`)
-2. Test the endpoint directly: `curl -w "%{time_total}\n" -o /dev/null -s https://cdn-lax.datahorders.org/`
+2. Test the endpoint directly: `curl -w "%{time_total}\n" -o /dev/null -s https://cdn-us-west-1.datahorders.org/`
 3. Ensure your origin server is responding quickly
 4. Contact support if an endpoint appears to have issues
 
@@ -807,7 +844,7 @@ A: Yes. Simply update your DNS records. Changes propagate according to the TTL.
 
 **Solutions:**
 1. Failover is handled entirely on our side - no configuration needed from you
-2. Verify you are pointing to our endpoint (e.g., `cdn-lax.datahorders.org`), not directly to an IP
+2. Verify you are pointing to our endpoint (e.g., `cdn-us-west-1.datahorders.org`), not directly to an IP
 3. Failover engages only when our health checks detect a problem, not based on client-side errors
 4. Contact support if you believe an endpoint is down but failover has not triggered
 
@@ -854,4 +891,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-*Last updated: December 2024*
+*Last updated: March 2026*
